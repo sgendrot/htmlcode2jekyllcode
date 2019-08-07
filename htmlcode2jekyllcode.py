@@ -11,7 +11,7 @@ logger = logging.getLogger("logger_console_debug")
 
 
 # Global var
-files_dir = "/Users/sgendrot/PycharmProjects/extract-to-jekyll"
+files_dir = "/Users/sylvain/jekyll/velocipaide/_posts"
 # dict of html tag and number of repetition
 tag_dic = {}
 
@@ -28,7 +28,7 @@ def analyze_jekyll_file(name):
     jekyll_file = files_dir+"/"+name
     logger.info("Let analyze: %s" % jekyll_file)
 
-    file_data = open(jekyll_file, "r").read()
+    file_data = open(jekyll_file, "r", encoding="latin-1").read()
 
     tags_extracted = re.findall("(<((/)?[a-z0-9]*)[^>]*>)", file_data)
     for atag in tags_extracted:
@@ -79,8 +79,11 @@ def clean_img_jekyll_file(name):
     jekyll_file = files_dir+"/"+name
     logger.info("Let process: %s" % jekyll_file)
 
-    file_data = open(jekyll_file, "r").read()
+    file_data = open(jekyll_file, "r", encoding="latin-1").read()
     # logger.debug("data : %s"% file_data)
+
+    # the file cleaned
+    file_data_clean=''
 
     # capture all img tag to process them
     all_img_tags = re.findall("<img([^>]*)/>", file_data)
@@ -101,13 +104,41 @@ def clean_img_jekyll_file(name):
             logger.debug("%s = %s"% (key, img_info[key]))
 
 
-    # replace old img tag by the new one
-    # file_data_clean = re.sub("<img([^>])*/>","", file_data)
+        # cleaning img src (bad url)
+        if "/wp-" in img_info['src']:  # a local image
+            img_src = img_info['src'].split("/")
+            logger.debug(img_src)
+            logger.debug("local img name= /assets/%s" % img_src[len(img_src)-1])
+            img_info['src'] = "/assets/" + img_src[len(img_src)-1]
+        else: # external image (I have to remove ../../../ added by the web copier)
+            img_src = re.sub("(../)*",'',img_info['src'])
+            logger.debug("extrenal img name= %s" % img_src)
+            img_info['src'] = img_src
 
 
-    # jekyll_file_stream = open(jekyll_file, "w")
-    # jekyll_file_stream.write(file_data_clean)
-    # jekyll_file_stream.close()
+        # markdown img: ![Alt text](/path/to/img.jpg "Optional title"){:height="50%" width="50%"}
+        img_jekyll_tag = "![%s](%s" % (img_info['alt'], img_info['src'])
+        if img_info['title']:
+            img_jekyll_tag = img_jekyll_tag + ' "' + img_info['title'] + '"'
+        img_jekyll_tag = img_jekyll_tag + ')'
+        if img_info['height'] and img_info['width']:
+            img_jekyll_tag = img_jekyll_tag + '{:height="%s" width="%s"}' % (img_info['height'], img_info['width'])
+        elif img_info['height']:
+            img_jekyll_tag = img_jekyll_tag + '{:height="%s"}' % img_info['height']
+        elif img_info['width']:
+            img_jekyll_tag = img_jekyll_tag + '{:width="%s"}' % img_info['width']
+
+        logger.debug("img jekyll: %s" % img_jekyll_tag)
+
+        # replace old img tag by the new one
+        file_data_clean = re.sub("<img([^>])*/>",img_jekyll_tag, file_data)
+
+    logger.debug(file_data_clean)
+    if file_data_clean:
+        jekyll_file_stream = open(jekyll_file, "w", encoding="latin-1")
+        jekyll_file_stream.write(file_data_clean)
+        jekyll_file_stream.close()
+
 
 
 ###########    MAIN    ###########
