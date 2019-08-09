@@ -11,7 +11,8 @@ logger = logging.getLogger("logger_console_debug")
 
 
 # Global var
-files_dir = "/Users/sylvain/jekyll/velocipaide/_posts"
+# files_dir = "/Users/sylvain/jekyll/velocipaide/_posts"
+files_dir = "/Users/sgendrot/jekyll/velocipaide/_posts"
 # dict of html tag and number of repetition
 tag_dic = {}
 
@@ -141,6 +142,35 @@ def clean_img_jekyll_file(name):
 
 
 
+def add_markdown_flag(name):
+    '''
+    To use markdown inside html tag, I have to add a flag to them
+    flag to add: markdown="1"
+
+    :param name: the name of the file
+    :type name: basestring
+    :return: xxxx
+    '''
+    jekyll_file = files_dir+"/"+name
+    logger.info("Let analyze: %s" % jekyll_file)
+
+    file_data = open(jekyll_file, "r", encoding="latin-1").read()
+
+    tags_extracted = re.findall("(<[^/][^>]*>)", file_data)
+    for atag in tags_extracted:
+        logger.debug("tags extracted: %s"% atag)
+
+        # replace old tag by the new one
+        file_data = re.sub(atag,atag[:-1]+' markdown="1">', file_data)
+        logger.debug("new file: %s" % file_data)
+
+    # rewrite the file
+    jekyll_file_stream = open(jekyll_file, "w", encoding="latin-1")
+    jekyll_file_stream.write(file_data)
+    jekyll_file_stream.close()
+
+
+
 ###########    MAIN    ###########
 
 if __name__ == "__main__":
@@ -149,7 +179,8 @@ if __name__ == "__main__":
         logger.debug ("call process_jekyll_file for %s" % afile)
         # process_jekyll_file(afile)
         # analyze_jekyll_file(afile)
-        clean_img_jekyll_file(afile)
+        # clean_img_jekyll_file(afile)
+        add_markdown_flag(afile)
     logger.info(tag_dic)
 
 
