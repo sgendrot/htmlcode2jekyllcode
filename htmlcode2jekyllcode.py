@@ -161,7 +161,8 @@ def add_markdown_flag(name):
         logger.debug("tags extracted: %s"% atag)
 
         # replace old tag by the new one
-        file_data = re.sub(atag,atag[:-1]+' markdown="1">', file_data)
+        if any(x in atag for x in ['<a','<p','<li']):
+            file_data = re.sub(atag,atag[:-1]+' markdown="1">', file_data)
         logger.debug("new file: %s" % file_data)
 
     # rewrite the file
@@ -180,7 +181,7 @@ if __name__ == "__main__":
         # process_jekyll_file(afile)
         # analyze_jekyll_file(afile)
         # clean_img_jekyll_file(afile)
-        add_markdown_flag(afile)
+        # add_markdown_flag(afile)
     logger.info(tag_dic)
 
 
