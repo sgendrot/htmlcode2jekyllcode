@@ -138,6 +138,72 @@ def clean_img_jekyll_file(name):
 
 
 
+def clean_a_href_tags(name):
+    '''
+    Many a tag are ugly (like ../../../../../wp-content/upLoads/...)
+    Clean the bad urls and put the jekyll's urls
+
+    Jekyll tag A:
+    [an example](http://example.com/ "Title")
+    <a href="http://example.com/" title="Title">an example</a>
+
+    :param name: the name of the file
+    :type name: basestring
+    :return: xxxx
+    '''
+    jekyll_file = files_dir+"/"+name
+    logger.info("Let process: %s" % jekyll_file)
+
+    file_data = open(jekyll_file, "r", encoding="latin-1").read()
+    # logger.debug("data : %s"% file_data)
+
+    # capture all img tag to process them
+    all_ahref_tags = re.findall("<a([^>]*)>([^<]*)</a>", file_data)
+    for ahref_tag in all_ahref_tags:
+        # a dict of the param of the img tag
+        ahref_info = {}
+
+        #if the tag isn't present, I will user this empty array
+        nonexistent_tag = ['','']
+        logger.debug("a a_href tag -----> %s" % ahref_tag[0])
+        # logger.debug("a a_href text -----> %s" % ahref_tag[1])
+        # not the most effective but more human readable
+        ahref_info['href'] = (re.search("href=\"([^\"]*)\"", ahref_tag[0]) or nonexistent_tag)[1]
+        # ahref_info['target'] = (re.search("target=\"([^\"]*)\"", ahref_tag[0]) or nonexistent_tag)[1] #not sure of the target support
+        ahref_info['title'] = (re.search("title=\"([^\"]*)\"", ahref_tag[0])or nonexistent_tag)[1]
+        for key in ahref_info:
+            logger.debug("%s = %s"% (key, ahref_info[key]))
+
+
+        # cleaning img url
+        if "/wp-content/upLoads" in ahref_info['href'] and not any ( x in ahref_info['href'] for x in [".html","php"]):  # a local img, not a link
+            img_name = ahref_info['href'].split("/")
+            logger.debug(img_name)
+            logger.debug("local ahref name= /assets/%s" % img_name[len(img_name)-1])
+            ahref_info['href'] = "/assets/" + img_name[len(img_name)-1]
+        else: # external ahref (I have to remove ../../../ added by the web copier)
+            ahref_url = re.sub("(\.\./)*",'',ahref_info['href'])
+            logger.debug("extrenal ahref name= %s" % ahref_url)
+            ahref_info['href'] = ahref_url
+
+
+        # markdown ahref: [text](http://example.com/ "Title")
+        ahref_jekyll_tag = "[%s](%s" % (ahref_tag[1], ahref_info['href'])
+        if ahref_info['title']:
+            ahref_jekyll_tag = ahref_jekyll_tag + ' "' + ahref_info['title'] + '"'
+        ahref_jekyll_tag = ahref_jekyll_tag + ')'
+
+        logger.debug("ahref jekyll: %s" % ahref_jekyll_tag)
+
+        # replace old ahref tag by the new one
+        file_data = file_data.replace("<a"+ahref_tag[0]+">"+ahref_tag[1]+"</a>",ahref_jekyll_tag)
+
+    logger.debug(file_data)
+    jekyll_file_stream = open(jekyll_file, "w", encoding="latin-1")
+    jekyll_file_stream.write(file_data)
+    jekyll_file_stream.close()
+
+
 def add_markdown_flag(name):
     '''
     To use markdown inside html tag, I have to add a flag to them
