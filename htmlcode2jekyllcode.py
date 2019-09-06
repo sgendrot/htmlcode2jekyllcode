@@ -83,9 +83,6 @@ def clean_img_jekyll_file(name):
     file_data = open(jekyll_file, "r", encoding="latin-1").read()
     # logger.debug("data : %s"% file_data)
 
-    # the file cleaned
-    file_data_clean=''
-
     # capture all img tag to process them
     all_img_tags = re.findall("<img([^>]*)/>", file_data)
     for img_tag in all_img_tags:
@@ -132,13 +129,12 @@ def clean_img_jekyll_file(name):
         logger.debug("img jekyll: %s" % img_jekyll_tag)
 
         # replace old img tag by the new one
-        file_data_clean = re.sub("<img([^>])*/>",img_jekyll_tag, file_data)
+        file_data = file_data.replace("<img" + img_tag + "/>", img_jekyll_tag)
 
-    logger.debug(file_data_clean)
-    if file_data_clean:
-        jekyll_file_stream = open(jekyll_file, "w", encoding="latin-1")
-        jekyll_file_stream.write(file_data_clean)
-        jekyll_file_stream.close()
+    logger.debug(file_data)
+    jekyll_file_stream = open(jekyll_file, "w", encoding="latin-1")
+    jekyll_file_stream.write(file_data)
+    jekyll_file_stream.close()
 
 
 
