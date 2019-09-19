@@ -11,8 +11,10 @@ logger = logging.getLogger("logger_console_debug")
 
 
 # Global var
-# files_dir = "/Users/sylvain/jekyll/velocipaide/_posts"
-files_dir = "/Users/sgendrot/jekyll/velocipaide/_posts"
+files_dir = "/Users/sylvain/jekyll/site_jekyll/_posts"
+img_dir = "/Users/sylvain/jekyll/site_jekyll/assets/old/"
+# files_dir = "/Users/sgendrot/jekyll/velocipaide/_posts"
+# img_dir = "/Users/sgendrot/jekyll/velocipaide/assets/old/"
 # dict of html tag and number of repetition
 tag_dic = {}
 
@@ -234,17 +236,66 @@ def add_markdown_flag(name):
 
 
 
+
+def analyze_img_usage():
+    '''
+    The export added many images but not all are used.
+    This function list the images in assests and find where they're used
+
+    '''
+    logger.info("inside of analyze_img_usage")
+
+    # first, save the images name in an dict
+    # the dict will be {'imgname':['jekyllfile','jekyllfile',...],'imgname':[...}
+    # where jekyllfile is a post file where the image is used
+    # to get a list of every post where an image is used
+    img_presence = {}
+
+    # save images filename in a dict of list
+    for imgfile in os.listdir(img_dir):
+        logger.debug("call an image file %s" % imgfile)
+        img_presence[imgfile] = []
+
+
+
+    logger.info("list posts pages")
+    # find image usage in post pages
+    for afile in os.listdir(files_dir):
+        logger.debug("look in %s" % files_dir+'/'+afile)
+        for imgfile in img_presence:
+            with open(files_dir+'/'+afile, "r", encoding="latin-1") as fic:
+                if imgfile in fic.read():
+                    logger.debug("Image %s is used in %s" % (imgfile, afile))
+                    # add the post page to the list of image presence
+                    img_presence[imgfile].append(afile)
+                # else:
+                #     logger.debug("Image %s is not used in %s" % (imgfile, afile))
+
+    # output the analyze
+    for imgfile in img_presence:
+        # logger.debug("file %s" % imgfile)
+        if not img_presence[imgfile]:
+            logger.info("Image %s is not used anywhere" % imgfile)
+        # else:
+        #     for postpage in img_presence[imgfile]:
+        #         logger.info("Image %s is used in %s" % (imgfile, postpage))
+
+
+
 ###########    MAIN    ###########
 
 if __name__ == "__main__":
     # the dir contains only jekyll-post files
-    for afile in os.listdir(files_dir):
-        logger.debug ("call process_jekyll_file for %s" % afile)
+    # for afile in os.listdir(files_dir):
+    #     logger.debug ("call process_jekyll_file for %s" % afile)
         # process_jekyll_file(afile)
         # analyze_jekyll_file(afile)
         # clean_img_jekyll_file(afile)
         # add_markdown_flag(afile)
-    logger.info(tag_dic)
+    # output the list of html tags
+    # logger.info(tag_dic)
+
+    analyze_img_usage()
 
 
 
